@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#6d28d9" />
+  <meta name="description" content="Crée un quiz sur toi et découvre qui te connaît vraiment !" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="QuizMoi" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>QuizMoi — Es-tu vraiment mon ami ?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <button type="button" class="top-nav-new" id="btnNavNewQuiz" hidden>+ Nouveau quiz</button>
+
+  <main class="app" id="app">
+    <!-- Accueil -->
+    <section class="screen screen--active" id="screen-home" data-screen="home">
+      <header class="hero">
+        <span class="hero__badge">Gratuit · Sans compte</span>
+        <h1>Quiz<span>Moi</span></h1>
+        <p class="hero__tagline">Es-tu vraiment mon ami ?</p>
+        <p class="hero__desc">Crée un quiz sur toi, envoie le lien à tes proches, et découvre qui te connaît le mieux.</p>
+      </header>
+
+      <div class="actions">
+        <button type="button" class="btn btn--primary btn--lg" id="btnCreate">Créer mon quiz</button>
+        <button type="button" class="btn btn--ghost btn--lg" id="btnCreateBlank">Quiz vierge</button>
+        <button type="button" class="btn btn--ghost btn--lg" id="btnJoin">J'ai reçu un lien</button>
+      </div>
+
+      <div class="join-box" id="joinBox" hidden>
+        <label for="joinInput">Colle le lien du quiz ici</label>
+        <input type="url" id="joinInput" class="input" placeholder="https://… ou ?q=…" />
+        <button type="button" class="btn btn--primary" id="btnJoinGo">Jouer</button>
+      </div>
+
+      <footer class="footer-note">
+        <p>5 à 20 questions · Thèmes au choix · Résultat partageable</p>
+      </footer>
+    </section>
+
+    <!-- Configuration -->
+    <section class="screen" id="screen-setup" data-screen="setup">
+      <header class="screen-head">
+        <button type="button" class="btn btn--back" id="btnBackSetup" aria-label="Retour">←</button>
+        <div>
+          <h2 id="setupTitle">Configure ton quiz</h2>
+          <p class="muted" id="setupDesc">Choisis combien de questions et sur quels sujets.</p>
+        </div>
+      </header>
+
+      <div class="setup-block">
+        <label class="setup-block__label">Nombre de questions</label>
+        <div class="count-picker" id="countPicker" role="group" aria-label="Nombre de questions">
+          <button type="button" class="count-btn" data-count="5">5</button>
+          <button type="button" class="count-btn count-btn--active" data-count="8">8</button>
+          <button type="button" class="count-btn" data-count="10">10</button>
+          <button type="button" class="count-btn" data-count="12">12</button>
+          <button type="button" class="count-btn" data-count="15">15</button>
+          <button type="button" class="count-btn" data-count="20">20</button>
+        </div>
+      </div>
+
+      <div class="setup-block" id="setupThemesBlock">
+        <label class="setup-block__label">Les questions porteront sur…</label>
+        <p class="setup-block__hint muted">Sélectionne un ou plusieurs thèmes.</p>
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+
+      <p class="form-error" id="setupError" hidden></p>
+      <button type="button" class="btn btn--primary btn--lg btn--block" id="btnSetupContinue">Continuer →</button>
+    </section>
+
+    <!-- Création -->
+    <section class="screen" id="screen-create" data-screen="create">
+      <header class="screen-head">
+        <button type="button" class="btn btn--back" id="btnBackCreate" aria-label="Retour">←</button>
+        <div>
+          <h2>Créer ton quiz</h2>
+          <p class="muted" id="createSubtitle">8 questions sur toi — tes amis devront deviner.</p>
+        </div>
+      </header>
+
+      <div class="setup-summary" id="setupSummary"></div>
+
+      <div class="creator-field">
+        <label for="creatorName">Ton prénom (affiché aux joueurs)</label>
+        <input type="text" id="creatorName" class="input" placeholder="Ton prénom…" maxlength="24" required />
+      </div>
+
+      <div class="templates" id="templatesBar">
+        <p class="templates__label">Régénérer depuis tes thèmes</p>
+        <button type="button" class="btn btn--chip" id="btnTemplates">Nouvelles suggestions</button>
+      </div>
+
+      <p class="blank-hint" id="blankHint" hidden>Quiz vierge — remplis chaque question et chaque réponse toi-même.</p>
+
+      <div class="questions-editor" id="questionsEditor"></div>
+
+      <button type="button" class="btn btn--primary btn--lg btn--block" id="btnPublish">Générer mon lien</button>
+      <p class="form-error" id="createError" hidden></p>
+    </section>
+
+    <!-- Lien créé -->
+    <section class="screen" id="screen-share" data-screen="share">
+      <header class="screen-head screen-head--center">
+        <div class="success-icon" aria-hidden="true">🎉</div>
+        <h2>Ton quiz est prêt !</h2>
+        <p class="muted">Envoie ce lien à tes amis, ta famille, ton crush…</p>
+      </header>
+
+      <div class="link-box">
+        <input type="text" id="shareLink" class="input input--link" readonly />
+        <button type="button" class="btn btn--primary" id="btnCopyLink">Copier</button>
+      </div>
+      <p class="copy-toast" id="copyToast" hidden>Lien copié !</p>
+
+      <div class="share-actions">
+        <button type="button" class="btn btn--ghost" id="btnShareWa">WhatsApp</button>
+        <button type="button" class="btn btn--ghost" id="btnShareSms">SMS</button>
+        <button type="button" class="btn btn--ghost" id="btnPreview">Tester moi-même</button>
+      </div>
+
+      <div class="manage-box">
+        <p class="manage-box__title">Classement partagé (lien classement)</p>
+        <input type="text" id="manageLink" class="input input--link" readonly />
+        <button type="button" class="btn btn--ghost btn--sm" id="btnCopyManage">Copier le lien classement</button>
+      </div>
+
+      <button type="button" class="btn btn--ghost btn--block" id="btnNewQuiz">+ Nouveau quiz</button>
+    </section>
+
+    <!-- Intro joueur -->
+    <section class="screen" id="screen-play-intro" data-screen="play-intro">
+      <div class="play-page">
+        <p class="play-page__creator" id="playCreatorLabel">Quiz de …</p>
+        <h2 class="play-page__title">Prêt à jouer ?</h2>
+        <p class="play-page__desc muted">Réponds aux <strong id="introQuestionCount">8</strong> questions sur <strong id="introCreatorName">…</strong>.<br>Une question par page — termine chaque question pour continuer.</p>
+        <label for="playerName">Ton prénom</label>
+        <input type="text" id="playerName" class="input" placeholder="Ton prénom…" maxlength="24" />
+        <button type="button" class="btn btn--primary btn--lg btn--block" id="btnStartPlay">C'est parti !</button>
+        <button type="button" class="btn btn--ghost btn--block btn--new-quiz-inline" id="btnNewQuizIntro">+ Nouveau quiz</button>
+      </div>
+    </section>
+
+    <!-- Une question = une page -->
+    <section class="screen" id="screen-play-question" data-screen="play-question">
+      <div class="play-page play-page--question" id="questionPage">
+        <header class="q-page-head">
+          <p class="q-page-head__creator" id="playCreatorLabelQ">Quiz de …</p>
+          <p class="q-page-head__num" id="questionBadge">Question 1</p>
+          <div class="progress-bar">
+            <div class="progress-bar__fill" id="progressFill"></div>
+          </div>
+          <p class="q-page-head__step" id="playStep">1 / 8</p>
+        </header>
+
+        <div class="q-page-body">
+          <h2 class="q-page-body__text" id="questionText"></h2>
+          <ul class="options" id="optionsList"></ul>
+        </div>
+
+        <footer class="q-page-foot" id="answerFeedback" hidden>
+          <div class="answer-feedback__box" id="feedbackBox">
+            <p class="answer-feedback__title" id="feedbackTitle"></p>
+            <p class="answer-feedback__correct" id="feedbackCorrect" hidden></p>
+          </div>
+          <button type="button" class="btn btn--primary btn--lg btn--block" id="btnContinue">Question suivante →</button>
+        </footer>
+      </div>
+    </section>
+
+    <!-- Résultat -->
+    <section class="screen" id="screen-result" data-screen="result">
+      <div class="result-card" id="resultCard">
+        <p class="result-card__label">Ton résultat</p>
+        <p class="result-card__score" id="resultScore">0 / 8</p>
+        <p class="result-card__title" id="resultTitle">…</p>
+        <p class="result-card__msg" id="resultMsg">…</p>
+        <p class="result-card__creator" id="resultCreator">Quiz de …</p>
+      </div>
+
+      <div class="result-actions">
+        <button type="button" class="btn btn--primary btn--lg" id="btnShareResult">Partager mon score</button>
+        <button type="button" class="btn btn--ghost" id="btnPlayAgain">Rejouer</button>
+        <button type="button" class="btn btn--ghost" id="btnNewQuizResult">+ Nouveau quiz</button>
+        <button type="button" class="btn btn--ghost" id="btnGoHome">Accueil</button>
+      </div>
+    </section>
+
+    <!-- Classement -->
+    <section class="screen" id="screen-manage" data-screen="manage">
+      <header class="screen-head screen-head--center">
+        <h2>Classement</h2>
+        <p class="muted" id="manageCreatorLabel">Quiz de …</p>
+      </header>
+
+      <ol class="leaderboard" id="leaderboard"></ol>
+      <p class="empty" id="leaderboardEmpty">Personne n'a encore joué.</p>
+
+      <div class="manage-actions">
+        <button type="button" class="btn btn--primary" id="btnPlayFromManage">Jouer au quiz</button>
+        <button type="button" class="btn btn--ghost" id="btnNewQuizManage">+ Nouveau quiz</button>
+        <button type="button" class="btn btn--ghost" id="btnHomeFromManage">Accueil</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

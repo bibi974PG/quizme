@@ -1,0 +1,39 @@
+{
+  "name": "QuizMoi — Es-tu vraiment mon ami ?",
+  "short_name": "QuizMoi",
+  "description": "Crée un quiz sur toi et découvre qui te connaît vraiment.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0a14",
+  "theme_color": "#6d28d9",
+  "lang": "fr",
+  "categories": ["entertainment", "social"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

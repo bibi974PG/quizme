@@ -1470,9 +1470,69 @@ body::before {
   gap: 8px;
 }
 
-@media (max-width: 480px) {
-  .share-actions {
-    grid-template-columns: 1fr;
-  }
+.btn--gamer {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 45%, #ec4899 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.35);
+}
+
+.btn--gamer:hover {
+  filter: brightness(1.08);
+}
+
+.gamer-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gamer-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(35, 31, 52, 0.9));
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.gamer-card:hover {
+  border-color: rgba(139, 92, 246, 0.7);
+  transform: translateY(-2px);
+}
+
+.gamer-card__icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.gamer-card__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gamer-card__text strong {
+  font-size: 16px;
+}
+
+.gamer-card__text span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.gamer-card__play {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-3);
+  flex-shrink: 0;
 }
 

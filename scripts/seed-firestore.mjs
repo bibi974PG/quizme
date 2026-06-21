@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { firebaseConfig } from "../firebase-config.js";
-import { DEFAULT_COUNT, DEFAULT_THEMES, THEMES, QUESTION_BANK, QUIZ_TEMPLATES } from "../content-data.js";
+import { DEFAULT_COUNT, DEFAULT_THEMES, THEMES, QUESTION_BANK, QUIZ_TEMPLATES, GAMER_QUIZZES } from "../content-data.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -13,6 +13,7 @@ await setDoc(doc(db, "content", "app"), {
   defaultCount: DEFAULT_COUNT,
   defaultThemes: DEFAULT_THEMES,
   quizTemplates: QUIZ_TEMPLATES,
+  gamerQuizzes: GAMER_QUIZZES,
   themes: THEMES,
   questionBank: QUESTION_BANK,
   themeCount: THEMES.length,

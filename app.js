@@ -13,6 +13,7 @@ import {
   getCurrentUser,
   computeQuizStats,
 } from "./firebase-db.js";
+import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
 
 (function () {
   "use strict";
@@ -21,6 +22,7 @@ import {
   let THEMES = [];
   let QUESTION_BANK = {};
   let QUIZ_TEMPLATES = [];
+  let GAMER_QUIZZES = [];
   let COMMUNITY_BY_THEME = {};
 
   let currentQuiz = null;
@@ -116,6 +118,50 @@ import {
         if (tpl) applyTemplate(tpl);
       });
     });
+  }
+
+  function renderGamerGrid() {
+    const grid = $("#gamerGrid");
+    if (!grid) return;
+    grid.innerHTML = GAMER_QUIZZES.map(
+      (g) => `
+      <button type="button" class="gamer-card" data-gamer="${g.id}">
+        <span class="gamer-card__icon">${g.icon || "🎮"}</span>
+        <div class="gamer-card__text">
+          <strong>${escapeHtml(g.label)}</strong>
+          <span>${escapeHtml(g.tag || "10 questions")}</span>
+        </div>
+        <span class="gamer-card__play">Jouer →</span>
+      </button>`
+    ).join("");
+    grid.querySelectorAll(".gamer-card").forEach((btn) => {
+      btn.addEventListener("click", () => startGamerQuiz(btn.dataset.gamer));
+    });
+  }
+
+  function startGamerQuiz(id) {
+    const meta = GAMER_QUIZZES.find((x) => x.id === id);
+    if (!meta) return;
+    const quiz = {
+      creator: meta.label,
+      intro: meta.intro || `10 questions sur ${meta.label}.`,
+      questions: meta.questions.map((q) => ({
+        text: q.text,
+        type: "choice",
+        options: [...q.options],
+        correct: q.correct ?? 0,
+      })),
+      timer: false,
+      isGamer: true,
+      _id: `gamer_${meta.id}`,
+    };
+    quiz._encoded = encodeQuiz(quiz);
+    startPlay(quiz);
+  }
+
+  function openGamerHub() {
+    renderGamerGrid();
+    showScreen("gamer");
   }
 
   function updateSetupView() {
@@ -347,8 +393,15 @@ import {
     return loadScoresLocally(id);
   }
 
-  function getTier(score, total, creator) {
+  function getTier(score, total, creator, isGamer) {
     const pct = total ? score / total : 0;
+    if (isGamer) {
+      if (score === total) return { title: "Pro gamer", msg: `Expert ${creator} — GG EZ !`, badge: "🏆" };
+      if (pct >= 0.75) return { title: "Hardcore", msg: "Tu grind clairement ce jeu.", badge: "🔥" };
+      if (pct >= 0.5) return { title: "Casual+", msg: "Pas mal, mais t'es pas meta.", badge: "🎮" };
+      if (pct >= 0.25) return { title: "Noob friendly", msg: "Retourne faire le tuto.", badge: "🐣" };
+      return { title: "AFK", msg: "T'étais où pendant le chargement ?", badge: "💤" };
+    }
     if (score === total) return { title: "Légende absolue", msg: `Score parfait. ${creator} devrait t'adopter.`, badge: "👑" };
     if (pct >= 0.75) return { title: "Âme sœur", msg: `Tu connais ${creator} mieux que ${creator} ne se connaît !`, badge: "💫" };
     if (pct >= 0.5) return { title: "Bon ami", msg: "Pas mal ! Tu fais partie du cercle proche.", badge: "🤝" };
@@ -818,7 +871,7 @@ import {
       details.push({ q, ok, playerAnswer, correct: getCorrectLabel(q) });
     });
 
-    const tier = getTier(score, total, currentQuiz.creator);
+    const tier = getTier(score, total, currentQuiz.creator, currentQuiz.isGamer);
     const id = currentQuiz._id || quizId(currentQuiz);
     const entry = {
       name: playState.playerName,
@@ -1115,6 +1168,7 @@ import {
     QUESTION_BANK = data.questionBank;
     DEFAULT_COUNT = data.defaultCount || 8;
     QUIZ_TEMPLATES = data.quizTemplates || DEFAULT_TEMPLATES;
+    GAMER_QUIZZES = data.gamerQuizzes?.length ? data.gamerQuizzes : FALLBACK_GAMER_QUIZZES;
     quizSetup = {
       count: DEFAULT_COUNT,
       themes: Array.isArray(data.defaultThemes) ? [...data.defaultThemes] : [],
@@ -1137,6 +1191,8 @@ import {
 
   function bindEvents() {
     $("#btnCreate").addEventListener("click", () => openSetup(false));
+    $("#btnQuizGamer")?.addEventListener("click", openGamerHub);
+    $("#btnBackGamer")?.addEventListener("click", () => showScreen("home"));
     $("#btnCreateBlank").addEventListener("click", () => openSetup(true));
     $("#btnNavNewQuiz").addEventListener("click", startNewQuiz);
     $("#btnDashboard")?.addEventListener("click", async () => {
@@ -1280,6 +1336,7 @@ import {
     applyContentData(data);
     await loadCommunityBank();
     renderTemplateRow();
+    renderGamerGrid();
     return true;
   }
 

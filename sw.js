@@ -1,4 +1,4 @@
-const CACHE_NAME = "quizmoi-v7";
+const CACHE_NAME = "quizmoi-v8";
 const ASSETS = [
   "./",
   "./index.html",

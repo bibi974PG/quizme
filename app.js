@@ -23,6 +23,7 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
   let QUESTION_BANK = {};
   let QUIZ_TEMPLATES = [];
   let GAMER_QUIZZES = [];
+  let selectedGamerId = null;
   let COMMUNITY_BY_THEME = {};
 
   let currentQuiz = null;
@@ -131,21 +132,42 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
           <strong>${escapeHtml(g.label)}</strong>
           <span>${escapeHtml(g.tag || "10 questions")}</span>
         </div>
-        <span class="gamer-card__play">Jouer →</span>
+        <span class="gamer-card__play">Choisir →</span>
       </button>`
     ).join("");
     grid.querySelectorAll(".gamer-card").forEach((btn) => {
-      btn.addEventListener("click", () => startGamerQuiz(btn.dataset.gamer));
+      btn.addEventListener("click", () => openGamerLevelPicker(btn.dataset.gamer));
     });
   }
 
-  function startGamerQuiz(id) {
+  const GAMER_LEVEL_LABELS = {
+    easy: "Facile",
+    hard: "Difficile",
+    expert: "Expert",
+  };
+
+  function openGamerLevelPicker(id) {
     const meta = GAMER_QUIZZES.find((x) => x.id === id);
     if (!meta) return;
+    selectedGamerId = id;
+    if ($("#gamerLevelTitle")) $("#gamerLevelTitle").textContent = meta.label;
+    if ($("#gamerLevelIcon")) $("#gamerLevelIcon").textContent = meta.icon || "🎮";
+    showScreen("gamer-level");
+  }
+
+  function startGamerQuiz(id, level) {
+    const meta = GAMER_QUIZZES.find((x) => x.id === id);
+    if (!meta) return;
+    const pack = meta.levels?.[level];
+    if (!pack?.questions?.length) {
+      alert("Quiz indisponible pour ce niveau.");
+      return;
+    }
+    const levelLabel = GAMER_LEVEL_LABELS[level] || level;
     const quiz = {
-      creator: meta.label,
-      intro: meta.intro || `10 questions sur ${meta.label}.`,
-      questions: meta.questions.map((q) => ({
+      creator: `${meta.label} · ${levelLabel}`,
+      intro: pack.intro || `10 questions ${levelLabel} sur ${meta.label}.`,
+      questions: pack.questions.map((q) => ({
         text: q.text,
         type: "choice",
         options: [...q.options],
@@ -153,7 +175,8 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
       })),
       timer: false,
       isGamer: true,
-      _id: `gamer_${meta.id}`,
+      gamerLevel: level,
+      _id: `gamer_${meta.id}_${level}`,
     };
     quiz._encoded = encodeQuiz(quiz);
     startPlay(quiz);
@@ -1163,12 +1186,29 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
     }
   }
 
+  function normalizeGamerQuizzes(list) {
+    return list.map((g) => {
+      if (g.levels?.easy?.questions?.length) return g;
+      if (!g.questions?.length) return g;
+      return {
+        ...g,
+        levels: {
+          easy: { intro: g.intro, questions: g.questions },
+          hard: { intro: g.intro, questions: g.questions },
+          expert: { intro: g.intro, questions: g.questions },
+        },
+      };
+    });
+  }
+
   function applyContentData(data) {
     THEMES = data.themes;
     QUESTION_BANK = data.questionBank;
     DEFAULT_COUNT = data.defaultCount || 8;
     QUIZ_TEMPLATES = data.quizTemplates || DEFAULT_TEMPLATES;
-    GAMER_QUIZZES = data.gamerQuizzes?.length ? data.gamerQuizzes : FALLBACK_GAMER_QUIZZES;
+    GAMER_QUIZZES = normalizeGamerQuizzes(
+      data.gamerQuizzes?.length ? data.gamerQuizzes : FALLBACK_GAMER_QUIZZES
+    );
     quizSetup = {
       count: DEFAULT_COUNT,
       themes: Array.isArray(data.defaultThemes) ? [...data.defaultThemes] : [],
@@ -1193,6 +1233,12 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
     $("#btnCreate").addEventListener("click", () => openSetup(false));
     $("#btnQuizGamer")?.addEventListener("click", openGamerHub);
     $("#btnBackGamer")?.addEventListener("click", () => showScreen("home"));
+    $("#btnBackGamerLevel")?.addEventListener("click", () => showScreen("gamer"));
+    $$(".difficulty-card").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (selectedGamerId) startGamerQuiz(selectedGamerId, btn.dataset.level);
+      });
+    });
     $("#btnCreateBlank").addEventListener("click", () => openSetup(true));
     $("#btnNavNewQuiz").addEventListener("click", startNewQuiz);
     $("#btnDashboard")?.addEventListener("click", async () => {

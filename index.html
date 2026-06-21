@@ -69,6 +69,35 @@
       <div class="gamer-grid" id="gamerGrid"></div>
     </section>
 
+    <!-- Choix difficulté quiz gamer -->
+    <section class="screen" id="screen-gamer-level" data-screen="gamer-level">
+      <header class="screen-head">
+        <button type="button" class="btn btn--back" id="btnBackGamerLevel" aria-label="Retour">←</button>
+        <div>
+          <p class="gamer-level__icon" id="gamerLevelIcon">🎮</p>
+          <h2 id="gamerLevelTitle">Jeu</h2>
+          <p class="muted">Choisis ta difficulté · 10 questions</p>
+        </div>
+      </header>
+      <div class="difficulty-grid">
+        <button type="button" class="difficulty-card difficulty-card--easy" data-level="easy">
+          <span class="difficulty-card__badge">🟢</span>
+          <strong>Facile</strong>
+          <span>Les bases du jeu</span>
+        </button>
+        <button type="button" class="difficulty-card difficulty-card--hard" data-level="hard">
+          <span class="difficulty-card__badge">🟠</span>
+          <strong>Difficile</strong>
+          <span>Pour les vrais fans</span>
+        </button>
+        <button type="button" class="difficulty-card difficulty-card--expert" data-level="expert">
+          <span class="difficulty-card__badge">🔴</span>
+          <strong>Expert</strong>
+          <span>Lore & détails hardcore</span>
+        </button>
+      </div>
+    </section>
+
     <!-- Configuration -->
     <section class="screen" id="screen-setup" data-screen="setup">
       <header class="screen-head">

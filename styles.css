@@ -1536,3 +1536,63 @@ body::before {
   flex-shrink: 0;
 }
 
+.gamer-level__icon {
+  font-size: 2.5rem;
+  margin-bottom: 4px;
+}
+
+.difficulty-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.difficulty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 20px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.difficulty-card strong {
+  font-size: 18px;
+}
+
+.difficulty-card > span:last-child {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.difficulty-card__badge {
+  font-size: 1.25rem;
+}
+
+.difficulty-card--easy {
+  border-color: rgba(52, 211, 153, 0.4);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(35, 31, 52, 0.9));
+}
+
+.difficulty-card--hard {
+  border-color: rgba(251, 146, 60, 0.45);
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.12), rgba(35, 31, 52, 0.9));
+}
+
+.difficulty-card--expert {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.14), rgba(35, 31, 52, 0.9));
+}
+
+.difficulty-card:hover {
+  transform: translateY(-2px);
+}
+

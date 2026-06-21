@@ -5,139 +5,19 @@ import {
   loadQuizRemote,
   saveScoreRemote,
   loadScoresRemote,
+  loadAppContent,
 } from "./firebase-db.js";
 
 (function () {
   "use strict";
 
-  const DEFAULT_COUNT = 8;
-
-  const THEMES = [
-    { id: "gouts", icon: "🎯", label: "Goûts & style", desc: "Couleurs, mode, emoji…" },
-    { id: "food", icon: "🍕", label: "Food & boisson", desc: "Plats, restos, cuisine…" },
-    { id: "musique", icon: "🎵", label: "Musique & culture", desc: "Artistes, films, séries…" },
-    { id: "amitie", icon: "💛", label: "Amitié", desc: "Entre nous, nos habitudes…" },
-    { id: "amour", icon: "💕", label: "Amour & couple", desc: "Dates, cadeaux, romance…" },
-    { id: "famille", icon: "👨‍👩‍👧", label: "Famille", desc: "Parents, fratrie, traditions…" },
-    { id: "fun", icon: "😂", label: "Fun & personnalité", desc: "Défauts, peurs, super-pouvoirs…" },
-    { id: "habitudes", icon: "⚡", label: "Habitudes", desc: "Matin, sport, sommeil…" },
-    { id: "souvenirs", icon: "📸", label: "Souvenirs", desc: "Voyages, école, moments…" },
-  ];
-
-  const QUESTION_BANK = {
-    gouts: [
-      { text: "Ma couleur préférée ?", options: ["Bleu", "Rouge", "Vert", "Violet"] },
-      { text: "Mon emoji signature ?", options: ["😎", "🔥", "✨", "💀"] },
-      { text: "Mon style vestimentaire ?", options: ["Casual", "Sport", "Chic", "Streetwear"] },
-      { text: "Ma saison préférée ?", options: ["Printemps", "Été", "Automne", "Hiver"] },
-      { text: "Mon animal totem ?", options: ["Chat", "Chien", "Loup", "Panda"] },
-      { text: "Ce que je collectionne ?", options: ["Rien", "Livres", "Sneakers", "Photos"] },
-      { text: "Mon parfum / odeur favorite ?", options: ["Vanille", "Citron", "Boisé", "Floral"] },
-      { text: "Mon accessoire fétiche ?", options: ["Montre", "Casquette", "Bijoux", "Sac"] },
-      { text: "Ma marque préférée ?", options: ["Nike", "Zara", "Apple", "Aucune en vrai"] },
-      { text: "Mon décor de chambre ?", options: ["Minimaliste", "Cosy", "Coloré", "Chaos organisé"] },
-    ],
-    food: [
-      { text: "Mon plat préféré ?", options: ["Pizza", "Sushi", "Tacos", "Pâtes"] },
-      { text: "Ma boisson préférée ?", options: ["Café", "Thé", "Jus", "Eau pétillante"] },
-      { text: "Mon fast-food ?", options: ["McDo", "KFC", "Subway", "Burger maison"] },
-      { text: "Mon dessert ultime ?", options: ["Gâteau", "Glace", "Tiramisu", "Crêpes"] },
-      { text: "Mon snack tard le soir ?", options: ["Chips", "Chocolat", "Fruits", "Rien du tout"] },
-      { text: "Mon type de cuisine ?", options: ["Italienne", "Asiatique", "Française", "Mexicaine"] },
-      { text: "Comment je prends mon café ?", options: ["Noir", "Latté", "Cappuccino", "Je ne bois pas"] },
-      { text: "Mon topping pizza ?", options: ["Pepperoni", "4 fromages", "Végétarienne", "Ananas"] },
-      { text: "Mon resto préféré ?", options: ["Italien", "Sushi bar", "Brunch", "Street food"] },
-      { text: "Mon plat à cuisiner ?", options: ["Pâtes", "Omelette", "Curry", "Je brûle tout"] },
-    ],
-    musique: [
-      { text: "Mon style de musique ?", options: ["Pop", "Rap", "Rock", "Electro"] },
-      { text: "Mon style d'artiste préféré ?", options: ["Rappeur", "Popstar", "Groupe de rock", "DJ / électro"] },
-      { text: "Mon film préféré ?", options: ["Comédie", "Action", "Romance", "Horreur"] },
-      { text: "Ma série du moment ?", options: ["Drama", "Comédie", "Thriller", "Animé"] },
-      { text: "Mon endroit pour un concert ?", options: ["Stade", "Petite salle", "Festival", "Canapé"] },
-      { text: "Mon genre YouTube ?", options: ["Humour", "Musique", "Gaming", "Vlogs"] },
-      { text: "Mon réseau social préféré ?", options: ["TikTok", "Instagram", "Snap", "Aucun"] },
-      { text: "Mon type de jeu vidéo ?", options: ["Sport", "Battle royale", "Aventure", "Je ne joue pas"] },
-      { text: "Mon livre / manga ?", options: ["Roman", "BD", "Manga", "Je ne lis pas"] },
-      { text: "Ma plateforme de streaming ?", options: ["Netflix", "Disney+", "Spotify", "YouTube"] },
-    ],
-    amitie: [
-      { text: "Où on se retrouve le plus ?", options: ["Au café", "Chez moi", "En ville", "En ligne"] },
-      { text: "Mon rôle dans le groupe ?", options: ["Le drôle", "Le sage", "L'organisateur", "Le fou"] },
-      { text: "Comment je dis bonjour ?", options: ["La bise", "Le check", "Un cri", "Un message"] },
-      { text: "Mon activité entre amis ?", options: ["Sortir", "Gaming", "Ciné", "Rien, on cause"] },
-      { text: "Mon délire avec les potes ?", options: ["Blagues", "Memes", "Chansons", "Débats"] },
-      { text: "Comment je réagis quand on m'appelle ?", options: ["Direct", "Je rappelle plus tard", "Message vocal", "Ghost 2h"] },
-      { text: "Mon cadeau d'anniversaire idéal ?", options: ["Expérience", "Objet", "Argent", "Surprise"] },
-      { text: "Mon groupe WhatsApp ?", options: ["Actif", "Muet", "Que des memes", "Plans de dernière minute"] },
-      { text: "Mon meilleur ami sait que je…", options: ["Mange mal", "Dors tard", "Chante mal", "Procrastine"] },
-      { text: "Notre inside joke ?", options: ["Un surnom", "Une phrase", "Un son", "Un regard"] },
-    ],
-    amour: [
-      { text: "Mon date idéal ?", options: ["Resto", "Balade", "Ciné", "Netflix"] },
-      { text: "Mon langage de l'amour ?", options: ["Cadeaux", "Temps", "Mots", "Câlins"] },
-      { text: "Ma fleur préférée ?", options: ["Rose", "Tulipe", "Lys", "Aucune"] },
-      { text: "Mon cadeau romantique ?", options: ["Lettre", "Bijou", "Surprise", "Repas maison"] },
-      { text: "Ma chanson de couple ?", options: ["Slow", "Pop", "Rap", "On n'en a pas"] },
-      { text: "Mon film romantique ?", options: ["Classique", "Comédie", "Drama", "Pas mon truc"] },
-      { text: "Comment je dis je t'aime ?", options: ["Direct", "Par actions", "Par emoji", "Rarement"] },
-      { text: "Mon endroit romantique ?", options: ["Plage", "Montagne", "Ville", "Chez nous"] },
-      { text: "Mon petit-déjeuner en amoureux ?", options: ["Croissants", "Pancakes", "Fruits", "Café seulement"] },
-      { text: "Ma soirée parfaite à deux ?", options: ["Resto", "Série", "Balade", "Soirée jeux"] },
-    ],
-    famille: [
-      { text: "Mon plat de famille ?", options: ["Gratin", "Raclette", "Tajine", "Barbecue"] },
-      { text: "Mon rôle en famille ?", options: ["Le calme", "Le boute-en-train", "Le mediator", "Le rebelle"] },
-      { text: "Ma tradition familiale ?", options: ["Repas du dimanche", "Vacances", "Noël", "Aucune fixe"] },
-      { text: "Qui je ressemble le plus ?", options: ["Maman", "Papa", "Personne", "Mon frère/sœur"] },
-      { text: "Mon surnom en famille ?", options: ["Bébé", "Champion", "Le petit", "Aucun"] },
-      { text: "Mon endroit chez les parents ?", options: ["Canapé", "Cuisine", "Ma chambre", "Jardin"] },
-      { text: "Ce que ma famille dit toujours ?", options: ["Mange !", "Range !", "Tu dors ?", "Appelle plus"] },
-      { text: "Mon cadeau pour Papa/Maman ?", options: ["Parfum", "Expérience", "Fait main", "Carte"] },
-      { text: "Notre activité en famille ?", options: ["Jeux", "Balade", "Ciné", "On se dispute"] },
-      { text: "Mon plat appris en famille ?", options: ["Gâteau", "Sauce", "Soupe", "Rien, Uber Eats"] },
-    ],
-    fun: [
-      { text: "Mon pire défaut ?", options: ["Trop en retard", "Trop bavard", "Perfectionniste", "Distrait"] },
-      { text: "Mon super-pouvoir secret ?", options: ["Dormir partout", "Manger énormément", "Retenir les dates", "Faire rire"] },
-      { text: "Ma plus grande peur ?", options: ["Araignées", "Vide", "Examen oral", "Rater le réveil"] },
-      { text: "Mon talent caché ?", options: ["Chant", "Dessin", "Imitations", "Aucun"] },
-      { text: "Mon emoji quand je suis énervé ?", options: ["😤", "💀", "🙃", "🤐"] },
-      { text: "Ma réaction au stress ?", options: ["Je mange", "Je dors", "Je parle", "Je disparais"] },
-      { text: "Mon mensonge préféré ?", options: ["J'arrive", "5 minutes", "J'ai pas vu", "Demain je m'y mets"] },
-      { text: "Mon délire absurde ?", options: ["Blagues nulles", "Voix bizarres", "Danses", "Théories"] },
-      { text: "Mon personnage Disney ?", options: ["Princesse", "Méchant", "Sidekick", "Héros"] },
-      { text: "Ce qui me fait rire à fond ?", options: ["Chutes", "Memes", "Blagues nulles", "Mes potes"] },
-    ],
-    habitudes: [
-      { text: "Plutôt lève-tôt ou couche-tard ?", options: ["Lève-tôt", "Couche-tard", "Les deux", "Dépend"] },
-      { text: "Mon sport ?", options: ["Foot", "Muscu", "Course", "Aucun"] },
-      { text: "Mon rituel du matin ?", options: ["Café", "Douche", "Scroll", "Rien"] },
-      { text: "Combien d'alarmes le matin ?", options: ["1", "3", "10", "Je n'ai pas besoin"] },
-      { text: "Mon rangement ?", options: ["Impeccable", "Organisé", "Bordélique", "Chaos"] },
-      { text: "Mon temps d'écran ?", options: ["Trop", "Normal", "Peu", "Je nie"] },
-      { text: "Ma sieste ?", options: ["Tous les jours", "Week-end", "Jamais", "Au boulot en cachette"] },
-      { text: "Mon moyen de transport ?", options: ["Voiture", "Vélo", "Transports", "À pied"] },
-      { text: "Mon organisation ?", options: ["Agenda", "Listes", "Dans ma tête", "Aucune"] },
-      { text: "Ma boisson du matin ?", options: ["Café", "Thé", "Jus", "Rien"] },
-    ],
-    souvenirs: [
-      { text: "Mon meilleur voyage ?", options: ["Plage", "Montagne", "Ville", "Camping"] },
-      { text: "Mon souvenir d'école ?", options: ["Rentrée", "Sortie", "Prof", "Récré"] },
-      { text: "Mon moment le plus drôle ?", options: ["Soirée", "Vacances", "École", "Random"] },
-      { text: "Mon cadeau le plus mémorable ?", options: ["Surprise", "Fait main", "Gadget", "Voyage"] },
-      { text: "Mon endroit d'enfance ?", options: ["Parc", "Mer", "Campagne", "Ma chambre"] },
-      { text: "Ma photo préférée ?", options: ["Entre amis", "En famille", "En voyage", "Selfie"] },
-      { text: "Mon concert mémorable ?", options: ["Stade", "Petite salle", "Festival", "Jamais été"] },
-      { text: "Mon anniversaire idéal ?", options: ["Grande fête", "Intime", "Surprise", "Discret"] },
-      { text: "Mon souvenir avec toi ?", options: ["Une soirée", "Un voyage", "Une blague", "On se connaît pas assez"] },
-      { text: "Mon objectif cette année ?", options: ["Voyage", "Sport", "Projet", "Profiter"] },
-    ],
-  };
+  let DEFAULT_COUNT = 8;
+  let THEMES = [];
+  let QUESTION_BANK = {};
 
   let currentQuiz = null;
   let playState = { index: 0, answers: [], playerName: "", locked: false };
-  let quizSetup = { count: DEFAULT_COUNT, themes: ["gouts", "amitie", "fun"], blank: false };
+  let quizSetup = { count: 8, themes: [], blank: false };
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
@@ -947,8 +827,40 @@ import {
     $("#btnHomeFromManage").addEventListener("click", startNewQuiz);
   }
 
+  function showContentError(message) {
+    document.body.innerHTML = `
+      <main style="max-width:28rem;margin:4rem auto;padding:1.5rem;font-family:system-ui,sans-serif;text-align:center;">
+        <h1 style="font-size:1.25rem;margin-bottom:0.75rem;">QuizMoi</h1>
+        <p style="color:#666;line-height:1.5;">${message}</p>
+      </main>`;
+  }
+
+  async function loadContentFromFirebase() {
+    const data = await loadAppContent();
+    if (!data?.themes?.length || !data?.questionBank) {
+      showContentError(
+        "Impossible de charger les thèmes et questions depuis Firebase. Vérifie ta connexion et les règles Firestore."
+      );
+      return false;
+    }
+    THEMES = data.themes;
+    QUESTION_BANK = data.questionBank;
+    DEFAULT_COUNT = data.defaultCount || 8;
+    quizSetup = {
+      count: DEFAULT_COUNT,
+      themes: Array.isArray(data.defaultThemes) ? [...data.defaultThemes] : [],
+      blank: false,
+    };
+    return true;
+  }
+
   async function boot() {
     await initFirebase();
+    if (!isOnlineDb()) {
+      showContentError("Firebase n'est pas configuré ou inaccessible. L'app nécessite une connexion à la base de données.");
+      return;
+    }
+    if (!(await loadContentFromFirebase())) return;
     renderThemeGrid();
     renderCountPicker();
     bindEvents();

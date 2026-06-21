@@ -80,3 +80,10 @@ export async function loadScoresRemote(quizId) {
   list.sort((a, b) => b.score - a.score || b.date - a.date);
   return list;
 }
+
+export async function loadAppContent() {
+  if (!db) return null;
+  const snap = await getDoc(doc(db, "content", "app"));
+  if (!snap.exists()) return null;
+  return snap.data();
+}

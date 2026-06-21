@@ -26,7 +26,8 @@ export function isFirebaseConfigured() {
 }
 
 /*
-  Règles Firestore (mode test — à affiner plus tard) :
+  Règles Firestore — fichier source : firestore.rules
+  Déploiement : CREER-RULES-FIREBASE.bat  ou  firebase deploy --only firestore:rules
 
   rules_version = '2';
   service cloud.firestore {
@@ -39,6 +40,10 @@ export function isFirebaseConfigured() {
         allow read: if true;
         allow create: if true;
         allow update, delete: if false;
+      }
+      match /content/{docId} {
+        allow read: if true;
+        allow write: if true;
       }
     }
   }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Import Firebase — QuizMoi</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 32rem;
+      margin: 3rem auto;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+    button {
+      font: inherit;
+      padding: 0.75rem 1.25rem;
+      border: 0;
+      border-radius: 0.75rem;
+      background: #6d28d9;
+      color: #fff;
+      cursor: pointer;
+    }
+    pre {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f4f4f5;
+      border-radius: 0.5rem;
+      white-space: pre-wrap;
+    }
+    a { color: #6d28d9; }
+  </style>
+</head>
+<body>
+  <h1>Import QuizMoi → Firebase</h1>
+  <p>
+    Transfère les 9 thèmes et 90 questions vers Firestore (<code>content/app</code>).
+    Avant de cliquer, vérifie les
+    <a href="https://console.firebase.google.com/project/quizmoi-dc07d/firestore/rules" target="_blank" rel="noopener">règles Firestore</a>
+    (fichier <code>firestore.rules</code> du projet).
+  </p>
+  <button type="button" id="btnImport">Importer maintenant</button>
+  <pre id="log">En attente…</pre>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { firebaseConfig } from "./firebase-config.js";
+    import { DEFAULT_COUNT, DEFAULT_THEMES, THEMES, QUESTION_BANK } from "./content-data.js";
+
+    const log = document.getElementById("log");
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function write(msg) {
+      log.textContent += msg + "\n";
+    }
+
+    document.getElementById("btnImport").addEventListener("click", async () => {
+      log.textContent = "";
+      const questionCount = Object.values(QUESTION_BANK).reduce((n, list) => n + list.length, 0);
+      write(`Import de ${THEMES.length} thèmes, ${questionCount} questions…`);
+
+      try {
+        await setDoc(doc(db, "content", "app"), {
+          version: 1,
+          defaultCount: DEFAULT_COUNT,
+          defaultThemes: DEFAULT_THEMES,
+          themes: THEMES,
+          questionBank: QUESTION_BANK,
+          themeCount: THEMES.length,
+          questionCount,
+          updatedAt: Date.now(),
+        });
+        write("OK — contenu enregistré dans content/app.");
+        write("Tu peux fermer cette page et recharger QuizMoi.");
+      } catch (err) {
+        write("Erreur : " + (err.message || err));
+        write("→ Mets à jour les règles Firestore puis réessaie.");
+      }
+    });
+  </script>
+</body>
+</html>

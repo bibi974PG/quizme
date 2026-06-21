@@ -1,0 +1,14 @@
+{
+  "name": "quizmoi",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node scripts/seed-firestore.mjs"
+  },
+  "dependencies": {
+    "firebase": "^12.15.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.22.0"
+  }
+}

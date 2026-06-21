@@ -27,6 +27,7 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
   let COMMUNITY_BY_THEME = {};
 
   let currentQuiz = null;
+  let playQuizSource = null;
   let playState = { index: 0, answers: [], playerName: "", locked: false, timerId: null, timeLeft: 0 };
   let quizSetup = { count: 8, themes: [], blank: false, timer: false };
   let editingQuizId = null;
@@ -130,7 +131,7 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
         <span class="gamer-card__icon">${g.icon || "🎮"}</span>
         <div class="gamer-card__text">
           <strong>${escapeHtml(g.label)}</strong>
-          <span>${escapeHtml(g.tag || "10 questions")}</span>
+          <span>${escapeHtml(g.tag || "4 niveaux")}</span>
         </div>
         <span class="gamer-card__play">Choisir →</span>
       </button>`
@@ -144,6 +145,14 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
     easy: "Facile",
     hard: "Difficile",
     expert: "Expert",
+    wat: "WAT",
+  };
+
+  const GAMER_LEVEL_COUNTS = {
+    easy: 10,
+    hard: 10,
+    expert: 10,
+    wat: 20,
   };
 
   function openGamerLevelPicker(id) {
@@ -164,15 +173,18 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
       return;
     }
     const levelLabel = GAMER_LEVEL_LABELS[level] || level;
+    const qCount = pack.questions.length;
     const quiz = {
       creator: `${meta.label} · ${levelLabel}`,
-      intro: pack.intro || `10 questions ${levelLabel} sur ${meta.label}.`,
-      questions: pack.questions.map((q) => ({
-        text: q.text,
-        type: "choice",
-        options: [...q.options],
-        correct: q.correct ?? 0,
-      })),
+      intro: pack.intro || `${qCount} questions ${levelLabel} sur ${meta.label}.`,
+      questions: pack.questions.map((q) =>
+        shuffleQuestionOptions({
+          text: q.text,
+          type: "choice",
+          options: [...q.options],
+          correct: q.correct ?? 0,
+        })
+      ),
       timer: false,
       isGamer: true,
       gamerLevel: level,
@@ -216,6 +228,7 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
 
   function startNewQuiz() {
     currentQuiz = null;
+    playQuizSource = null;
     editingQuizId = null;
     playState = { index: 0, answers: [], playerName: "", locked: false, timerId: null, timeLeft: 0 };
     if (window.location.search) {
@@ -247,6 +260,31 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
+  }
+
+  /** Mélange les réponses — la bonne réponse change de position à chaque partie. */
+  function shuffleQuestionOptions(question) {
+    if (question.type === "text" || !question.options?.length) return { ...question };
+    const correctIdx = question.correct ?? 0;
+    const pairs = question.options.map((opt, i) => ({ opt, isCorrect: i === correctIdx }));
+    const shuffled = shuffle(pairs);
+    return {
+      ...question,
+      options: shuffled.map((p) => p.opt),
+      correct: Math.max(0, shuffled.findIndex((p) => p.isCorrect)),
+    };
+  }
+
+  function cloneQuiz(quiz) {
+    return JSON.parse(JSON.stringify(quiz));
+  }
+
+  function prepareQuizForPlay(quiz) {
+    const base = cloneQuiz(quiz);
+    return {
+      ...base,
+      questions: base.questions.map((q) => shuffleQuestionOptions(q)),
+    };
   }
 
   function pickQuestions(count, themeIds) {
@@ -416,9 +454,14 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
     return loadScoresLocally(id);
   }
 
-  function getTier(score, total, creator, isGamer) {
+  function getTier(score, total, creator, isGamer, gamerLevel) {
     const pct = total ? score / total : 0;
     if (isGamer) {
+      if (gamerLevel === "wat" || creator.includes("WAT")) {
+        if (score === total) return { title: "??? IMPOSSIBLE ???", msg: "T'es un alien. C'est illégal.", badge: "💀" };
+        if (pct >= 0.5) return { title: "Survivant WAT", msg: "Peu de gens arrivent là.", badge: "🧠" };
+        return { title: "Victime du WAT", msg: "Même Google a abandonné.", badge: "☠️" };
+      }
       if (score === total) return { title: "Pro gamer", msg: `Expert ${creator} — GG EZ !`, badge: "🏆" };
       if (pct >= 0.75) return { title: "Hardcore", msg: "Tu grind clairement ce jeu.", badge: "🔥" };
       if (pct >= 0.5) return { title: "Casual+", msg: "Pas mal, mais t'es pas meta.", badge: "🎮" };
@@ -676,33 +719,34 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
   }
 
   function startPlay(quiz) {
-    currentQuiz = quiz;
+    playQuizSource = cloneQuiz(quiz);
+    currentQuiz = playQuizSource;
     playState = { index: 0, answers: [], playerName: "", locked: false, timerId: null, timeLeft: 0 };
-    const total = quiz.questions.length;
-    $("#playCreatorLabel").textContent = `Quiz de ${quiz.creator}`;
-    $("#playCreatorLabelQ").textContent = `Quiz de ${quiz.creator}`;
-    $("#introCreatorName").textContent = quiz.creator;
+    const total = playQuizSource.questions.length;
+    $("#playCreatorLabel").textContent = `Quiz de ${playQuizSource.creator}`;
+    $("#playCreatorLabelQ").textContent = `Quiz de ${playQuizSource.creator}`;
+    $("#introCreatorName").textContent = playQuizSource.creator;
     $("#introQuestionCount").textContent = total;
     $("#playerName").value = "";
 
     const avatarWrap = $("#playAvatarWrap");
     const avatarImg = $("#playAvatar");
-    if (quiz.avatar && avatarWrap && avatarImg) {
-      avatarImg.src = quiz.avatar;
-      avatarImg.alt = quiz.creator;
+    if (playQuizSource.avatar && avatarWrap && avatarImg) {
+      avatarImg.src = playQuizSource.avatar;
+      avatarImg.alt = playQuizSource.creator;
       avatarWrap.hidden = false;
     } else if (avatarWrap) avatarWrap.hidden = true;
 
     const introEl = $("#playIntroMsg");
     if (introEl) {
-      if (quiz.intro) {
-        introEl.textContent = quiz.intro;
+      if (playQuizSource.intro) {
+        introEl.textContent = playQuizSource.intro;
         introEl.hidden = false;
       } else introEl.hidden = true;
     }
 
     const timerNote = $("#playTimerNote");
-    if (timerNote) timerNote.hidden = !quiz.timer;
+    if (timerNote) timerNote.hidden = !playQuizSource.timer;
 
     showScreen("play-intro");
   }
@@ -724,6 +768,9 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
     playState.index = 0;
     playState.answers = [];
     playState.locked = false;
+    const source = playQuizSource || currentQuiz;
+    if (!source?.questions?.length) return;
+    currentQuiz = prepareQuizForPlay(source);
     showQuestionPage();
   }
 
@@ -894,7 +941,7 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
       details.push({ q, ok, playerAnswer, correct: getCorrectLabel(q) });
     });
 
-    const tier = getTier(score, total, currentQuiz.creator, currentQuiz.isGamer);
+    const tier = getTier(score, total, currentQuiz.creator, currentQuiz.isGamer, currentQuiz.gamerLevel);
     const id = currentQuiz._id || quizId(currentQuiz);
     const entry = {
       name: playState.playerName,
@@ -1344,7 +1391,10 @@ import { GAMER_QUIZZES as FALLBACK_GAMER_QUIZZES } from "./content-data.js";
       if ($("#creatorName")) $("#creatorName").value = playState.playerName || "";
     });
 
-    $("#btnPlayAgain").addEventListener("click", () => { if (currentQuiz) startPlay(currentQuiz); });
+    $("#btnPlayAgain").addEventListener("click", () => {
+      if (playQuizSource) startPlay(playQuizSource);
+      else if (currentQuiz) startPlay(currentQuiz);
+    });
     $("#btnGoHome").addEventListener("click", startNewQuiz);
 
     $("#btnEditQuiz")?.addEventListener("click", () => {

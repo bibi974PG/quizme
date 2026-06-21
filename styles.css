@@ -1592,6 +1592,16 @@ body::before {
   background: linear-gradient(135deg, rgba(248, 113, 113, 0.14), rgba(35, 31, 52, 0.9));
 }
 
+.difficulty-card--wat {
+  border-color: rgba(168, 85, 247, 0.65);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(20, 10, 30, 0.95));
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.15);
+}
+
+.difficulty-card--wat strong {
+  letter-spacing: 0.08em;
+}
+
 .difficulty-card:hover {
   transform: translateY(-2px);
 }

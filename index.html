@@ -37,6 +37,12 @@
         <button type="button" class="btn btn--primary btn--lg" id="btnCreate">Créer mon quiz</button>
         <button type="button" class="btn btn--ghost btn--lg" id="btnCreateBlank">Quiz vierge</button>
         <button type="button" class="btn btn--ghost btn--lg" id="btnJoin">J'ai reçu un lien</button>
+        <button type="button" class="btn btn--ghost btn--lg" id="btnDashboard">Mes quiz</button>
+      </div>
+
+      <div class="template-section" id="templateSection">
+        <p class="template-section__label">Modèles prêts à l'emploi</p>
+        <div class="template-row" id="templateRow"></div>
       </div>
 
       <div class="join-box" id="joinBox" hidden>
@@ -78,6 +84,14 @@
         <div class="theme-grid" id="themeGrid"></div>
       </div>
 
+      <div class="setup-block">
+        <label class="setup-block__label">Options de jeu</label>
+        <label class="toggle-row">
+          <input type="checkbox" id="setupTimer" />
+          <span>Chrono par question (15 s)</span>
+        </label>
+      </div>
+
       <p class="form-error" id="setupError" hidden></p>
       <button type="button" class="btn btn--primary btn--lg btn--block" id="btnSetupContinue">Continuer →</button>
     </section>
@@ -97,6 +111,16 @@
       <div class="creator-field">
         <label for="creatorName">Ton prénom (affiché aux joueurs)</label>
         <input type="text" id="creatorName" class="input" placeholder="Ton prénom…" maxlength="24" required />
+      </div>
+
+      <div class="creator-field">
+        <label for="creatorAvatar">Photo / avatar (URL, optionnel)</label>
+        <input type="url" id="creatorAvatar" class="input" placeholder="https://…" />
+      </div>
+
+      <div class="creator-field">
+        <label for="creatorIntro">Message aux joueurs (optionnel)</label>
+        <textarea id="creatorIntro" class="input input--area" placeholder="Si tu me connais vraiment, tu fais 10/10 !" maxlength="200" rows="2"></textarea>
       </div>
 
       <div class="templates" id="templatesBar">
@@ -129,8 +153,12 @@
       <div class="share-actions">
         <button type="button" class="btn btn--ghost" id="btnShareWa">WhatsApp</button>
         <button type="button" class="btn btn--ghost" id="btnShareSms">SMS</button>
+        <button type="button" class="btn btn--ghost" id="btnShareMessenger">Messenger</button>
+        <button type="button" class="btn btn--ghost" id="btnShareNative">Partager…</button>
         <button type="button" class="btn btn--ghost" id="btnPreview">Tester moi-même</button>
       </div>
+
+      <button type="button" class="btn btn--ghost btn--sm btn--block" id="btnNotifyEnable">Activer les notifs (nouveaux joueurs)</button>
 
       <div class="manage-box">
         <p class="manage-box__title">Classement partagé (lien classement)</p>
@@ -144,9 +172,14 @@
     <!-- Intro joueur -->
     <section class="screen" id="screen-play-intro" data-screen="play-intro">
       <div class="play-page">
+        <div class="play-avatar" id="playAvatarWrap" hidden>
+          <img id="playAvatar" alt="" class="play-avatar__img" />
+        </div>
         <p class="play-page__creator" id="playCreatorLabel">Quiz de …</p>
         <h2 class="play-page__title">Prêt à jouer ?</h2>
+        <p class="play-page__intro" id="playIntroMsg" hidden></p>
         <p class="play-page__desc muted">Réponds aux <strong id="introQuestionCount">8</strong> questions sur <strong id="introCreatorName">…</strong>.<br>Une question par page — termine chaque question pour continuer.</p>
+        <p class="play-page__timer-note muted" id="playTimerNote" hidden>⏱ Mode chrono : 15 secondes par question</p>
         <label for="playerName">Ton prénom</label>
         <input type="text" id="playerName" class="input" placeholder="Ton prénom…" maxlength="24" />
         <button type="button" class="btn btn--primary btn--lg btn--block" id="btnStartPlay">C'est parti !</button>
@@ -164,11 +197,19 @@
             <div class="progress-bar__fill" id="progressFill"></div>
           </div>
           <p class="q-page-head__step" id="playStep">1 / 8</p>
+          <div class="timer-bar" id="timerBar" hidden>
+            <div class="timer-bar__fill" id="timerFill"></div>
+          </div>
+          <p class="timer-label" id="timerLabel" hidden>15 s</p>
         </header>
 
         <div class="q-page-body">
           <h2 class="q-page-body__text" id="questionText"></h2>
           <ul class="options" id="optionsList"></ul>
+          <div class="text-answer" id="textAnswerBox" hidden>
+            <input type="text" id="textAnswerInput" class="input" placeholder="Ta réponse…" maxlength="80" />
+            <button type="button" class="btn btn--primary btn--block" id="btnSubmitText">Valider</button>
+          </div>
         </div>
 
         <footer class="q-page-foot" id="answerFeedback" hidden>
@@ -184,6 +225,7 @@
     <!-- Résultat -->
     <section class="screen" id="screen-result" data-screen="result">
       <div class="result-card" id="resultCard">
+        <p class="result-badge" id="resultBadge" aria-hidden="true">🏆</p>
         <p class="result-card__label">Ton résultat</p>
         <p class="result-card__score" id="resultScore">0 / 8</p>
         <p class="result-card__title" id="resultTitle">…</p>
@@ -191,29 +233,67 @@
         <p class="result-card__creator" id="resultCreator">Quiz de …</p>
       </div>
 
+      <div class="result-details" id="resultDetails" hidden>
+        <p class="result-details__title">Détail des réponses</p>
+        <ul class="result-details__list" id="resultDetailsList"></ul>
+      </div>
+
       <div class="result-actions">
         <button type="button" class="btn btn--primary btn--lg" id="btnShareResult">Partager mon score</button>
+        <button type="button" class="btn btn--ghost" id="btnReview">Voir les corrections</button>
+        <button type="button" class="btn btn--ghost" id="btnCreateReturn">Créer mon quiz en retour</button>
         <button type="button" class="btn btn--ghost" id="btnPlayAgain">Rejouer</button>
         <button type="button" class="btn btn--ghost" id="btnNewQuizResult">+ Nouveau quiz</button>
         <button type="button" class="btn btn--ghost" id="btnGoHome">Accueil</button>
       </div>
     </section>
 
+    <!-- Mode correction -->
+    <section class="screen" id="screen-review" data-screen="review">
+      <header class="screen-head">
+        <button type="button" class="btn btn--back" id="btnBackReview" aria-label="Retour">←</button>
+        <div>
+          <h2>Corrections</h2>
+          <p class="muted" id="reviewSubtitle">Toutes les bonnes réponses</p>
+        </div>
+      </header>
+      <ol class="review-list" id="reviewList"></ol>
+      <button type="button" class="btn btn--ghost btn--block" id="btnReviewHome">Accueil</button>
+    </section>
+
     <!-- Classement -->
     <section class="screen" id="screen-manage" data-screen="manage">
       <header class="screen-head screen-head--center">
-        <h2>Classement</h2>
+        <h2>Classement & stats</h2>
         <p class="muted" id="manageCreatorLabel">Quiz de …</p>
       </header>
+
+      <div class="stats-panel" id="statsPanel"></div>
 
       <ol class="leaderboard" id="leaderboard"></ol>
       <p class="empty" id="leaderboardEmpty">Personne n'a encore joué.</p>
 
       <div class="manage-actions">
+        <button type="button" class="btn btn--primary" id="btnEditQuiz">Modifier le quiz</button>
         <button type="button" class="btn btn--primary" id="btnPlayFromManage">Jouer au quiz</button>
         <button type="button" class="btn btn--ghost" id="btnNewQuizManage">+ Nouveau quiz</button>
         <button type="button" class="btn btn--ghost" id="btnHomeFromManage">Accueil</button>
       </div>
+    </section>
+
+    <!-- Tableau de bord créateur -->
+    <section class="screen" id="screen-dashboard" data-screen="dashboard">
+      <header class="screen-head">
+        <button type="button" class="btn btn--back" id="btnBackDashboard" aria-label="Retour">←</button>
+        <div>
+          <h2>Mes quiz</h2>
+          <p class="muted" id="dashboardUserLabel">Tes quiz créés</p>
+        </div>
+      </header>
+      <button type="button" class="btn btn--ghost btn--block" id="btnGoogleSignIn">Se connecter avec Google</button>
+      <ul class="dashboard-list" id="dashboardList"></ul>
+      <p class="empty" id="dashboardEmpty" hidden>Aucun quiz enregistré. Crée-en un !</p>
+      <button type="button" class="btn btn--primary btn--block" id="btnDashboardCreate">+ Créer un quiz</button>
     </section>
   </main>
 

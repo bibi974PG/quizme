@@ -1,4 +1,4 @@
-const CACHE_NAME = "quizmoi-v5";
+const CACHE_NAME = "quizmoi-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const ASSETS = [
   "./app.js",
   "./firebase-config.js",
   "./firebase-db.js",
+  "./content-data.js",
   "./manifest.json",
   "./icons/icon.svg",
   "./icons/icon-192.png",

@@ -4,6 +4,13 @@ export const DEFAULT_COUNT = 8;
 
 export const DEFAULT_THEMES = ["gouts", "amitie", "fun"];
 
+export const QUIZ_TEMPLATES = [
+  { id: "couple", icon: "💕", label: "Quiz couple", desc: "Amour & souvenirs", themes: ["amour", "souvenirs"], count: 10 },
+  { id: "bff", icon: "💛", label: "Quiz BFF", desc: "Amitié & fun", themes: ["amitie", "fun"], count: 10 },
+  { id: "famille", icon: "👨‍👩‍👧", label: "Quiz famille", desc: "Famille & traditions", themes: ["famille", "souvenirs"], count: 8 },
+  { id: "foodie", icon: "🍕", label: "Quiz food", desc: "Plats & goûts", themes: ["food", "gouts"], count: 8 },
+];
+
 export const THEMES = [
   { id: "gouts", icon: "🎯", label: "Goûts & style", desc: "Couleurs, mode, emoji…" },
   { id: "food", icon: "🍕", label: "Food & boisson", desc: "Plats, restos, cuisine…" },
